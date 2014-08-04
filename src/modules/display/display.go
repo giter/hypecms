@@ -13,7 +13,7 @@ import (
 	"modules/display/model"
 	"jsonp"
 	"require"
-	"github.com/russross/blackfriday"
+	"blackfriday"
 	"html/template"
 	"runtime/debug"
 	"strings"

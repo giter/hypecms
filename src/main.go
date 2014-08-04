@@ -3,7 +3,6 @@
 package main
 
 import (
-
 	"api/context"
 	"api/mod"
 	"api/shell"
@@ -359,10 +358,13 @@ func err() {
 
 // getSite gets the freshest option document, caches it and creates an instance of context.Uni.
 func getSite(session *mgo.Session, db *mgo.Database, w http.ResponseWriter, req *http.Request) {
+
 	Put = func(a ...interface{}) {
 		io.WriteString(w, fmt.Sprint(a...)+"\n")
 	}
+	
 	defer err()
+	
 	uni := &context.Uni{
 		Db:    db,
 		W:     w,
@@ -373,23 +375,30 @@ func getSite(session *mgo.Session, db *mgo.Database, w http.ResponseWriter, req 
 		P:     req.URL.Path,
 		Paths: strings.Split(req.URL.Path, "/"),
 	}
+	
 	uni.Caller = mod.NewCall(uni)
+	
 	// Not sure if not giving the db session to nonadmin installations increases security, but hey, one can never be too cautious, they dont need it anyway.
 	if DB_ADM_MODE {
 		uni.Session = session
 	}
+	
 	uni.Ev = context.NewEv(uni)
 	opt, opt_str, err := main_model.HandleConfig(uni.Db, req.Host, OPT_CACHE) // Tricky part about the host, see comments at main_model.
+	
 	if err != nil {
 		uni.Put(err.Error())
 		return
 	}
+	
 	uni.Req.Host = scut.Host(req.Host, opt)
 	uni.Opt = opt
 	uni.SetOriginalOpt(opt_str)
 	uni.SetSecret(SECRET)
+	
 	first_p := uni.Paths[1]
 	last_p := uni.Paths[len(uni.Paths)-1]
+	
 	if SERVE_FILES && strings.Index(last_p, ".") != -1 {
 		has_sfx := strings.HasSuffix(last_p, ".go")
 		if first_p == "template" || first_p == "tpl" && !has_sfx {
@@ -424,9 +433,6 @@ func serveTemplateFile(w http.ResponseWriter, req *http.Request, uni *context.Un
 func main() {
 	fmt.Println("Server has started.")
 	handleConfigVars()
-	//if DEBUG {
-	//	modcheck.Check()
-	//}
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Println(r)
@@ -451,10 +457,12 @@ func main() {
 	}
 	db := session.DB(DB_NAME)
 	defer session.Close()
+	
 	http.HandleFunc("/",
 		func(w http.ResponseWriter, req *http.Request) {
 			getSite(session, db, w, req)
 		})
+		
 	err = http.ListenAndServe(ADDR+":"+PORT_NUM, nil)
 	if err != nil {
 		fmt.Println(err)
