@@ -2,3 +2,5 @@
 /uploads
 /shared
 *.gitignore
+/pkg/
+/bin/
